@@ -56,7 +56,7 @@ for typeIndex = 1:length(types)  % Iterate over ship types
             Ships(shipIndex).life = attributes(typeIndex, 4);
             Ships(shipIndex).crew = attributes(typeIndex, 5);
 
-            % Initialize in a random possition into a white space
+            % Initialize in a random position into a white space
             Ships(shipIndex).position = randomPosition(labB, m, n);
             shipIndex = shipIndex + 1;
         end
@@ -74,8 +74,8 @@ for step = 1:numSteps
     % Move each ship
     for i = 1:numShips
         if Ships(i).life > 0
-            % Verify if the ship is hasn't been sunk
-            Ships(i).position = moveShip(Ships(i).position, labB);
+            % Verify if the ship hasn't been sunk
+            Ships(i).position = moveShipTowardsEnemy(Ships(i), Ships, labB);
         end
         % Re-draw ship
         plotShip(Ships(i), colors, sunkenColor);
@@ -85,7 +85,58 @@ end
 
 %% Auxiliarly functions
 
-% Randomly decide a possition to move
+% Move ship towards the closest enemy, or randomly if blocked or no enemies
+function newPosition = moveShipTowardsEnemy(ship, allShips, labB)
+    % Find the closest enemy
+    closestEnemy = findClosestEnemy(ship, allShips);
+    
+    % If there's no enemy alive, move randomly
+    if isempty(closestEnemy)
+        newPosition = moveRandomly(ship.position, labB);
+        return;
+    end
+    
+    % Direction vector to the closest enemy
+    direction = closestEnemy.position - ship.position;
+    direction = sign(direction);  % Normalize to [-1, 0, 1] for discrete moves
+    
+    % Calculate the new position towards the enemy
+    newPosition = ship.position + direction;
+    
+    % Ensure the position stays within the bounds
+    [m, n] = size(labB);
+    newPosition = max(min(newPosition, [m, n]), [1, 1]);
+    
+    % If the new position is invalid, move randomly
+    if ~labB(newPosition(1), newPosition(2))
+        newPosition = moveRandomly(ship.position, labB);
+    end
+end
+
+
+% Find the closest enemy ship
+function closestEnemy = findClosestEnemy(ship, allShips)
+    minDistance = inf;
+    closestEnemy = [];
+    
+    for i = 1:length(allShips)
+        % Skip ships of the same army or sunken ships
+        if strcmp(ship.army, allShips(i).army) || allShips(i).life <= 0
+            continue;
+        end
+        
+        % Calculate the Euclidean distance to the enemy ship
+        distance = norm(ship.position - allShips(i).position);
+        
+        % Update the closest enemy if necessary
+        if distance < minDistance
+            minDistance = distance;
+            closestEnemy = allShips(i);
+        end
+    end
+end
+
+% Randomly decide a position to move
 function position = randomPosition(labB, m, n)
     while true
         x = randi([2, n-1]);
@@ -97,23 +148,29 @@ function position = randomPosition(labB, m, n)
     end
 end
 
-% Move ship to the randomly generated possition
-function newPosition = moveShip(position, labB)
+% Randomly move the ship to a valid position
+function newPosition = moveRandomly(position, labB)
     % All possible eight directions
     moves = [0, 1; 1, 1; 1, 0; 1, -1; 0, -1; -1, -1; -1, 0; -1, 1];
 
-    % Move to the calculated position in a random direction
-    newPosition = position + moves(randi(8), :);
+    % Try up to 8 random directions to find a valid position
+    for attempt = 1:8
+        randomMove = moves(randi(8), :);
+        tentativePosition = position + randomMove;
 
-    % Get the size of the map (labB) 
-    [m, n] = size(labB);
-    % Ensure the position stays within the bounds
-    newPosition = max(min(newPosition, [m, n]), [1, 1]);
-    
-    % If the new position is invalid, stay at the current position
-    if ~labB(newPosition(1), newPosition(2))
-        newPosition = position;
+        % Ensure the position stays within bounds
+        [m, n] = size(labB);
+        tentativePosition = max(min(tentativePosition, [m, n]), [1, 1]);
+        
+        % If the tentative position is valid, use it
+        if labB(tentativePosition(1), tentativePosition(2))
+            newPosition = tentativePosition;
+            return;
+        end
     end
+    
+    % If no valid position is found, stay in the same position
+    newPosition = position;
 end
 
 %% Graph simulation
