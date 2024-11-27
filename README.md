@@ -15,6 +15,8 @@ This repository contains a collaborative effort of a agent-based model which sim
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ```
 
+The project is based on the Agent-Based Model proposed in this [article](An_Agent-Based_Model_Battle_of_Trafalgar.pdf).
+
 ## Contributors 
 
 ![Alejandro](https://img.shields.io/badge/GitHub-Alejandro-181717?style=for-the-badge&logo=github)  ![Axel](https://img.shields.io/badge/GitHub-Axel-181717?style=for-the-badge&logo=github) ![Ruesga](https://img.shields.io/badge/GitHub-Ruesga-181717?style=for-the-badge&logo=github)
