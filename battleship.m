@@ -69,7 +69,12 @@ for step = 1:numSteps
     cla;
     imshow(labB);
     hold on;
+
+    % Display current iteration
+    text(10, 10, sprintf('Iteration: %d', step), 'Color', 'white', ...
+         'FontSize', 12, 'FontWeight', 'bold', 'BackgroundColor', 'black');
     
+    % Simulate in each ship
     for i = 1:numShips
         if Ships(i).life > 0
             % Verify if the ship hasn't been sunk
@@ -106,7 +111,6 @@ end
 
 %% Movement Behaviour: approaching to nearest enemies
 
-% Move ship towards the closest enemy, or randomly if blocked or no enemies
 function newPosition = moveShipTowardsEnemy(ship, allShips, labB)
     % Find the closest enemy
     closestEnemyIndex = findClosestEnemy(ship, allShips);
@@ -129,7 +133,7 @@ function newPosition = moveShipTowardsEnemy(ship, allShips, labB)
     % Calculate the new position
     newPosition = ship.position + movement;
     
-    % Ensure the position stays within bounds
+    % Ensure the position stays in the map
     [m, n] = size(labB);
     newPosition = max(min(newPosition, [m, n]), [1, 1]);
     
@@ -148,7 +152,7 @@ function newPosition = moveRandomly(position, speed, labB)
     % Calculate new position
     newPosition = position + randomMove;
     
-    % Ensure the position stays within bounds
+    % Ensure the position stays in the map
     [m, n] = size(labB);
     newPosition = max(min(newPosition, [m, n]), [1, 1]);
     
