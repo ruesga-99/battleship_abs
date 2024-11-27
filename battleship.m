@@ -22,19 +22,19 @@ sunkenColor = [0.5, 0.5, 0.5];
 % Corresponding Army
 armies = {'ally', 'enemy'};
 
-% firepower, speed, maneuverability, health, crew size
-attributes = [10, 5, 5, 40, 50;         % monitor  
-              25, 7, 4, 70, 75;         % corvette
-              40, 5, 3, 80, 200;        % frigate
-              50, 3, 2, 100, 300];      % destroyer
+% firepower, speed, health, maxRange
+attributes = [10, 3, 400, 30;        % monitor  
+              25, 2, 700, 25;        % corvette
+              40, 2, 800, 20;        % frigate
+              50, 1, 1000, 15];      % destroyer
 
 % Define ship as a structure
 Ships = struct('type', [], 'army', [], 'firepower', [], 'speed', [], ...
-               'maneuverability', [], 'life', [], 'crew', [], 'position', []);
+                'life', [], 'position', [], 'maxRange',[]);
 
 %% Initial Configuration
 
-numSteps = 100; % Number of iterations
+numSteps = 250; % Number of iterations
 
 % Amount of agents
 numShipsPerArmy = 8;         
@@ -52,9 +52,8 @@ for typeIndex = 1:length(types)  % Iterate over ship types
             % Assign attributes according to the type of the ship
             Ships(shipIndex).firepower = attributes(typeIndex, 1);
             Ships(shipIndex).speed = attributes(typeIndex, 2);
-            Ships(shipIndex).maneuverability = attributes(typeIndex, 3);
-            Ships(shipIndex).life = attributes(typeIndex, 4);
-            Ships(shipIndex).crew = attributes(typeIndex, 5);
+            Ships(shipIndex).life = attributes(typeIndex, 3);
+            Ships(shipIndex).maxRange = attributes(typeIndex, 4);
 
             % Initialize in a random position into a white space
             Ships(shipIndex).position = randomPosition(labB, m, n);
@@ -71,53 +70,100 @@ for step = 1:numSteps
     imshow(labB);
     hold on;
     
-    % Move each ship
     for i = 1:numShips
         if Ships(i).life > 0
             % Verify if the ship hasn't been sunk
-            Ships(i).position = moveShipTowardsEnemy(Ships(i), Ships, labB);
+            closestEnemyIndex = findClosestEnemy(Ships(i), Ships);
+            
+            if ~isempty(closestEnemyIndex)
+                % Simulate combat if within range
+                Ships = simulateCombat(Ships, i, closestEnemyIndex);
+                Ships(i).position = moveRandomly(Ships(i).position, Ships(i).speed, labB);
+            else
+                % Move the ship if no combat occurs
+                Ships(i).position = moveShipTowardsEnemy(Ships(i), Ships, labB);
+            end
         end
         % Re-draw ship
         plotShip(Ships(i), colors, sunkenColor);
     end
-    pause(0.2);
+    pause(0.1);
 end
 
-%% Auxiliarly functions
+%% Combat Behaviour
+
+% Simulate combat between ships
+function Ships = simulateCombat(Ships, attackerIndex, enemyIndex)
+    % Calculate the distance between the attacker and the enemy
+    distance = norm(Ships(attackerIndex).position - Ships(enemyIndex).position);
+    
+    % Check if the distance is within half of the attacker's max range
+    if distance <= Ships(attackerIndex).maxRange / 2
+        % Reduce the enemy's life by the attacker's firepower
+        Ships(enemyIndex).life = Ships(enemyIndex).life - Ships(attackerIndex).firepower;
+    end
+end
+
+%% Movement Behaviour: approaching to nearest enemies
 
 % Move ship towards the closest enemy, or randomly if blocked or no enemies
 function newPosition = moveShipTowardsEnemy(ship, allShips, labB)
     % Find the closest enemy
-    closestEnemy = findClosestEnemy(ship, allShips);
+    closestEnemyIndex = findClosestEnemy(ship, allShips);
     
     % If there's no enemy alive, move randomly
-    if isempty(closestEnemy)
-        newPosition = moveRandomly(ship.position, labB);
+    if isempty(closestEnemyIndex)
+        newPosition = moveRandomly(ship.position, ship.speed, labB);
         return;
     end
     
     % Direction vector to the closest enemy
-    direction = closestEnemy.position - ship.position;
-    direction = sign(direction);  % Normalize to [-1, 0, 1] for discrete moves
+    direction = allShips(closestEnemyIndex).position - ship.position;
+    if norm(direction) > 0
+        direction = direction / norm(direction);  % Normalize to unit vector
+    end
     
-    % Calculate the new position towards the enemy
-    newPosition = ship.position + direction;
+    % Scale the movement by the ship's speed
+    movement = round(direction * ship.speed);
     
-    % Ensure the position stays within the bounds
+    % Calculate the new position
+    newPosition = ship.position + movement;
+    
+    % Ensure the position stays within bounds
     [m, n] = size(labB);
     newPosition = max(min(newPosition, [m, n]), [1, 1]);
     
     % If the new position is invalid, move randomly
     if ~labB(newPosition(1), newPosition(2))
-        newPosition = moveRandomly(ship.position, labB);
+        newPosition = moveRandomly(ship.position, ship.speed, labB);
     end
 end
 
+%% Movement Behaviour: randomly moves if enemies are not found within the range
 
-% Find the closest enemy ship
-function closestEnemy = findClosestEnemy(ship, allShips)
+function newPosition = moveRandomly(position, speed, labB)
+    % Generate random movement scaled by speed
+    randomMove = round((rand(1, 2) * 2 - 1) * speed);  % Random values in [-speed, speed]
+    
+    % Calculate new position
+    newPosition = position + randomMove;
+    
+    % Ensure the position stays within bounds
+    [m, n] = size(labB);
+    newPosition = max(min(newPosition, [m, n]), [1, 1]);
+    
+    % If the new position is invalid, stay at the current position
+    if ~labB(newPosition(1), newPosition(2))
+        newPosition = position;
+    end
+end
+
+%% Auxiliary Functions
+
+% Find the index of the closest enemy ship
+function closestEnemyIndex = findClosestEnemy(ship, allShips)
     minDistance = inf;
-    closestEnemy = [];
+    closestEnemyIndex = [];
     
     for i = 1:length(allShips)
         % Skip ships of the same army or sunken ships
@@ -128,10 +174,10 @@ function closestEnemy = findClosestEnemy(ship, allShips)
         % Calculate the Euclidean distance to the enemy ship
         distance = norm(ship.position - allShips(i).position);
         
-        % Update the closest enemy if necessary
-        if distance < minDistance
+        % Update the closest enemy if within range and closer
+        if distance < minDistance && distance <= ship.maxRange
             minDistance = distance;
-            closestEnemy = allShips(i);
+            closestEnemyIndex = i;
         end
     end
 end
@@ -148,47 +194,21 @@ function position = randomPosition(labB, m, n)
     end
 end
 
-% Randomly move the ship to a valid position
-function newPosition = moveRandomly(position, labB)
-    % All possible eight directions
-    moves = [0, 1; 1, 1; 1, 0; 1, -1; 0, -1; -1, -1; -1, 0; -1, 1];
-
-    % Try up to 8 random directions to find a valid position
-    for attempt = 1:8
-        randomMove = moves(randi(8), :);
-        tentativePosition = position + randomMove;
-
-        % Ensure the position stays within bounds
-        [m, n] = size(labB);
-        tentativePosition = max(min(tentativePosition, [m, n]), [1, 1]);
-        
-        % If the tentative position is valid, use it
-        if labB(tentativePosition(1), tentativePosition(2))
-            newPosition = tentativePosition;
-            return;
-        end
-    end
-    
-    % If no valid position is found, stay in the same position
-    newPosition = position;
-end
-
 %% Graph simulation
 
 function plotShip(ship, colors, sunkenColor)
-
     typeIndex = find(strcmp({'monitor', 'corvette', 'frigate', 'destroyer'}, ship.type));
 
     % While the ship is still active, color it with the corresponding code
     if ship.life > 0
         color = colors{typeIndex};
     else
-    % If the ship has been destroyed, graph it gray
+        % If the ship has been destroyed, graph it gray
         color = sunkenColor;
     end
     
     % Plot each ship with their corresponding coordinates and status
-    plot(ship.position(2), ship.position(1), 'o', 'MarkerSize', 10, ...
+    plot(ship.position(2), ship.position(1), 'D', 'MarkerSize', 10, ...
          'MarkerFaceColor', color, 'MarkerEdgeColor', 'k');
     
     % Assign colors for army labels'
