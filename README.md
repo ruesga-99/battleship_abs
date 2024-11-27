@@ -1,6 +1,7 @@
 # Battleship Agent-Based Simulation
 
 This repository contains a collaborative effort of a agent-based model which simulates a naval battle scenario. 
+The project is based on the Agent-Based Model proposed in this [article](An_Agent-Based_Model_Battle_of_Trafalgar.pdf).
 
 ```plaintext
                                      # #  ( )
@@ -15,7 +16,29 @@ This repository contains a collaborative effort of a agent-based model which sim
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ```
 
-The project is based on the Agent-Based Model proposed in this [article](An_Agent-Based_Model_Battle_of_Trafalgar.pdf).
+## Funtionality
+### Environment 
+- Black pixels represent land and ships cannot navigate over them.
+- White pixels represent water and ships will only navigate there.
+- The map can be replaced for any image with similar characteristics.
+
+![Base Map](mapBase.png)
+
+### Agents 
+| Type      | Firepower | Speed | Health | Max Range | Color  |
+|-----------|-----------|-------|--------|-----------|--------|
+| Monitor   | 10        | 3     | 400    | 30        | Red    |
+| Corvette  | 25        | 2     | 700    | 25        | Green  |
+| Frigate   | 40        | 2     | 800    | 20        | Blue   |
+| Destroyer | 50        | 1     | 1000   | 15        | Yellow |
+
+- Agents keep track of other characteristics such as their possition and the nearest enemy.
+
+- Whenever a ship is destroyed, the color will be switched to Gray.
+
+- Ships will be assigned to different armies, being Ally (blue) and Enemy (red).
+
+### Behaviours
 
 ## Contributors 
 
