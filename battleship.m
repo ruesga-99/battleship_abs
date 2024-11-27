@@ -23,7 +23,7 @@ sunkenColor = [0.5, 0.5, 0.5];
 armies = {'ally', 'enemy'};
 
 % firepower, speed, health, maxRange
-attributes = [10, 3, 400, 30;        % monitor  
+attributes = [10, 3, 400, 30;        %    
               25, 2, 700, 25;        % corvette
               40, 2, 800, 20;        % frigate
               50, 1, 1000, 15];      % destroyer
