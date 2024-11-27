@@ -32,13 +32,28 @@ The project is based on the Agent-Based Model proposed in this [article](An_Agen
 | Frigate   | 40        | 2     | 800    | 20        | Blue   |
 | Destroyer | 50        | 1     | 1000   | 15        | Yellow |
 
-- Agents keep track of other characteristics such as their possition and the nearest enemy.
+- Agents keep track of other characteristics such as their position and the nearest enemy.
 
 - Whenever a ship is destroyed, the color will be switched to Gray.
 
 - Ships will be assigned to different armies, being Ally (blue) and Enemy (red).
 
 ### Behaviours
+**1. Random Movement:**
+Ships will randomly move if no enemies are within their max range, the possible movements include 8 directions.
+Movement will be influenced by their speed, which will act as a multiplier of the basic movement unit (1 px).
+If combat occurs, ships will also move randomly (simulating retreat or attack). A validation will take place to
+ensure no movements will occur outside the map, if thats the case, the ship will stay on its current position.
+
+**2. Directed Movement:**
+Ships will approach their enemies if there are any within their max range and if they're not sunk, for this the
+nearest enemy will be calculated using the euclidean distance. Movement will be influenced by their speed, which 
+will act as a multiplier of the basic movement unit (1 px).
+
+**3. Combat:**
+If a ship detects its nearest enemy within half-distance of its max range, the ship will atack it, lowering the
+enemy's health according to the firepower, if a combat is held, the implicated ships will randomly move, whenever
+a shio reaches 0 healthpoints it will be sunk and its color will be changed to Gray.
 
 ## Contributors 
 
