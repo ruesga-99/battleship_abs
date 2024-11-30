@@ -17,35 +17,36 @@ if size(labOg, 1) ~= size(visualMap, 1) || size(labOg, 2) ~= size(visualMap, 2)
 end
 
 % Convert logical map to binary for movement logic
-labB = labOg(:, :, 1) > 120;  % Adjust threshold if necessary
+labB = labOg(:, :, 1) > 120;  
 
 % Get map size
 [m, n] = size(labB);
 
 %% Load sprites
 sprites = struct();
-sprites.ship1 = imresize(imread('assets/ship1.png'), 1.25);
-sprites.ship2 = imresize(imread('assets/ship2.png'), 1.25);
-sprites.ship3 = imresize(imread('assets/ship3.png'), 1.25);
+sprites.corvette = imresize(imread('assets/corvette.png'), 2.2); 
+sprites.destroyer = imresize(imread('assets/destroyer.png'), 2.2);
+sprites.frigate = imresize(imread('assets/frigate.png'), 2.2);
+sprites.monitor = imresize(imread('assets/monitor.png'), 2.2);
 
 %% Agent's attributes
 
 % Types and corresponding sprites
-types = {'ship1', 'ship2', 'ship3'};
-attributes = [10, 3, 400, 30;        % ship1
-              25, 2, 700, 25;        % ship2
-              40, 2, 800, 20];       % ship3
+types = {'corvette', 'destroyer', 'frigate', 'monitor'};
+attributes = [10, 3, 400, 30;        % Corvette
+              25, 2, 700, 25;        % Destroyer
+              40, 2, 800, 20;        % Frigate
+              60, 1, 1000, 15];      % Monitor
 
 % Corresponding Army
 armies = {'ally', 'enemy'};
 
 % Define ship as a structure
 Ships = struct('type', [], 'army', [], 'firepower', [], 'speed', [], ...
-                'life', [], 'position', [], 'maxRange',[]);
+                'life', [], 'position', [], 'maxRange', []);
 
 %% Initial Configuration
-
-numSteps = 250; % Number of iterations
+numIte = 350; 
 
 % Amount of agents
 numShipsPerArmy = 6;         
@@ -73,9 +74,9 @@ for typeIndex = 1:length(types)  % Iterate over ship types
     end
 end
 
-%% Simulation 
+%% Simulation
 
-for step = 1:numSteps
+for step = 1:numIte
     % Update simulation
     cla;
     imshow(visualMap); % Render the visual map as the base layer
@@ -84,13 +85,13 @@ for step = 1:numSteps
     % Display current iteration
     text(10, 10, sprintf('Iteration: %d', step), 'Color', 'white', ...
          'FontSize', 12, 'FontWeight', 'bold', 'BackgroundColor', 'black');
-    
+
     % Simulate in each ship
     for i = 1:numShips
         if Ships(i).life > 0
             % Verify if the ship hasn't been sunk
             closestEnemyIndex = findClosestEnemy(Ships(i), Ships);
-            
+
             if ~isempty(closestEnemyIndex)
                 % Simulate combat if within range
                 Ships = simulateCombat(Ships, i, closestEnemyIndex);
@@ -108,14 +109,10 @@ end
 
 %% Combat Behaviour
 
-% Simulate combat between ships
 function Ships = simulateCombat(Ships, attackerIndex, enemyIndex)
-    % Calculate the distance between the attacker and the enemy
     distance = norm(Ships(attackerIndex).position - Ships(enemyIndex).position);
-    
-    % Check if the distance is within half of the attacker's max range
+
     if distance <= Ships(attackerIndex).maxRange / 2
-        % Reduce the enemy's life by the attacker's firepower
         Ships(enemyIndex).life = Ships(enemyIndex).life - Ships(attackerIndex).firepower;
     end
 end
@@ -123,32 +120,24 @@ end
 %% Movement Behaviour: approaching to nearest enemies
 
 function newPosition = moveShipTowardsEnemy(ship, allShips, labB)
-    % Find the closest enemy
     closestEnemyIndex = findClosestEnemy(ship, allShips);
-    
-    % If there's no enemy alive, move randomly
+
     if isempty(closestEnemyIndex)
         newPosition = moveRandomly(ship.position, ship.speed, labB);
         return;
     end
-    
-    % Direction vector to the closest enemy
+
     direction = allShips(closestEnemyIndex).position - ship.position;
     if norm(direction) > 0
-        direction = direction / norm(direction);  % Normalize to unit vector
+        direction = direction / norm(direction);
     end
-    
-    % Scale the movement by the ship's speed
+
     movement = round(direction * ship.speed);
-    
-    % Calculate the new position
     newPosition = ship.position + movement;
-    
-    % Ensure the position stays in the map
+
     [m, n] = size(labB);
     newPosition = max(min(newPosition, [m, n]), [1, 1]);
-    
-    % If the new position is invalid, move randomly
+
     if ~labB(newPosition(1), newPosition(2))
         newPosition = moveRandomly(ship.position, ship.speed, labB);
     end
@@ -157,17 +146,12 @@ end
 %% Movement Behaviour: randomly moves if enemies are not found within the range
 
 function newPosition = moveRandomly(position, speed, labB)
-    % Generate random movement scaled by speed
-    randomMove = round((rand(1, 2) * 2 - 1) * speed);  % Random values in [-speed, speed]
-    
-    % Calculate new position
+    randomMove = round((rand(1, 2) * 2 - 1) * speed);
     newPosition = position + randomMove;
-    
-    % Ensure the position stays in the map
+
     [m, n] = size(labB);
     newPosition = max(min(newPosition, [m, n]), [1, 1]);
-    
-    % If the new position is invalid, stay at the current position
+
     if ~labB(newPosition(1), newPosition(2))
         newPosition = position;
     end
@@ -175,21 +159,17 @@ end
 
 %% Auxiliary Functions
 
-% Find the index of the closest enemy ship
 function closestEnemyIndex = findClosestEnemy(ship, allShips)
     minDistance = inf;
     closestEnemyIndex = [];
-    
+
     for i = 1:length(allShips)
-        % Skip ships of the same army or sunken ships
         if strcmp(ship.army, allShips(i).army) || allShips(i).life <= 0
             continue;
         end
-        
-        % Calculate the Euclidean distance to the enemy ship
+
         distance = norm(ship.position - allShips(i).position);
-        
-        % Update the closest enemy if within range and closer
+
         if distance < minDistance && distance <= ship.maxRange
             minDistance = distance;
             closestEnemyIndex = i;
@@ -197,34 +177,27 @@ function closestEnemyIndex = findClosestEnemy(ship, allShips)
     end
 end
 
-% Randomly decide a position to move
 function position = randomPosition(labB, m, n)
     while true
-        x = randi([2, n-1]);
-        y = randi([2, m-1]);
-        if labB(y, x)  % Ensure the position is on water
+        x = randi([2, n - 1]);
+        y = randi([2, m - 1]);
+        if labB(y, x)
             position = [y, x];
             return;
         end
     end
 end
 
-%% Graph simulation
-
 function plotShip(ship, sprites)
-    % Determine the sprite based on the ship type
     sprite = sprites.(ship.type);
 
-    % Calculate the ship position
-    x = ship.position(2); % Horizontal position
-    y = ship.position(1); % Vertical position
+    x = ship.position(2);
+    y = ship.position(1);
 
-    % Sprite dimensions
     spriteHeight = size(sprite, 1);
     spriteWidth = size(sprite, 2);
 
-    % Plot the sprite
     image([x - spriteWidth / 2, x + spriteWidth / 2], ...
           [y - spriteHeight / 2, y + spriteHeight / 2], ...
-          sprite, 'AlphaData', 1.0); % No transparency
+          sprite, 'AlphaData', 1.0);
 end
