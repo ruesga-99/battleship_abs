@@ -35,13 +35,16 @@ The project is based on the Agent-Based Model proposed in this [article](An_Agen
 - The map can be replaced for any image with similar characteristics.
 
 ![Base Map](/assets/mapBaseOg.png)
+
+### Visuals added
+
 ![Base Map](/assets/mapBase.png)
 
 ### Agents
 
 | Type      | Firepower | Speed | Health | Max Range | Image                                    |
 | --------- | --------- | ----- | ------ | --------- | ---------------------------------------- |
-| Monitor   | 10        | 3     | 400    | 30        | ![Monitor ship](/assets/montior.png)     |
+| Monitor   | 10        | 3     | 400    | 30        | ![Monitor ship](/assets/monitor.png)     | 
 | Corvette  | 25        | 2     | 700    | 25        | ![corvette ship](/assets/corvette.png)   |
 | Frigate   | 40        | 2     | 800    | 20        | ![Frigate ship](/assets/frigate.png)     |
 | Destroyer | 50        | 1     | 1000   | 15        | ![Destroyer ship](/assets/destroyer.png) |
