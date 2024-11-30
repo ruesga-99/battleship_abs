@@ -5,28 +5,39 @@ clc
 
 %% Environment configuration
 
-% Load and process map
-lab = imread('mapBase.png'); 
-labB = lab(:, :, 1) > 120;  
+% Load visual map for display
+visualMap = imread('assets/mapBase.png');
+
+% Load logical map for computation
+labOg = imread('assets/mapBaseOg.png');
+
+% Ensure dimensions match
+if size(labOg, 1) ~= size(visualMap, 1) || size(labOg, 2) ~= size(visualMap, 2)
+    labOg = imresize(labOg, [size(visualMap, 1), size(visualMap, 2)]);
+end
+
+% Convert logical map to binary for movement logic
+labB = labOg(:, :, 1) > 120;  % Adjust threshold if necessary
 
 % Get map size
 [m, n] = size(labB);
 
+%% Load sprites
+sprites = struct();
+sprites.ship1 = imresize(imread('assets/ship1.png'), 1.25);
+sprites.ship2 = imresize(imread('assets/ship2.png'), 1.25);
+sprites.ship3 = imresize(imread('assets/ship3.png'), 1.25);
+
 %% Agent's attributes
 
-% Types and related colors
-types = {'monitor', 'corvette', 'frigate', 'destroyer'};
-colors = {[1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 1, 0]};  
-sunkenColor = [0.5, 0.5, 0.5];
+% Types and corresponding sprites
+types = {'ship1', 'ship2', 'ship3'};
+attributes = [10, 3, 400, 30;        % ship1
+              25, 2, 700, 25;        % ship2
+              40, 2, 800, 20];       % ship3
 
 % Corresponding Army
 armies = {'ally', 'enemy'};
-
-% firepower, speed, health, maxRange
-attributes = [10, 3, 400, 30;        %    
-              25, 2, 700, 25;        % corvette
-              40, 2, 800, 20;        % frigate
-              50, 1, 1000, 15];      % destroyer
 
 % Define ship as a structure
 Ships = struct('type', [], 'army', [], 'firepower', [], 'speed', [], ...
@@ -37,7 +48,7 @@ Ships = struct('type', [], 'army', [], 'firepower', [], 'speed', [], ...
 numSteps = 250; % Number of iterations
 
 % Amount of agents
-numShipsPerArmy = 8;         
+numShipsPerArmy = 6;         
 numShips = numShipsPerArmy * 2;
 
 % Initialize agents
@@ -67,7 +78,7 @@ end
 for step = 1:numSteps
     % Update simulation
     cla;
-    imshow(labB);
+    imshow(visualMap); % Render the visual map as the base layer
     hold on;
 
     % Display current iteration
@@ -90,7 +101,7 @@ for step = 1:numSteps
             end
         end
         % Re-draw ship
-        plotShip(Ships(i), colors, sunkenColor);
+        plotShip(Ships(i), sprites);
     end
     pause(0.1);
 end
@@ -191,7 +202,7 @@ function position = randomPosition(labB, m, n)
     while true
         x = randi([2, n-1]);
         y = randi([2, m-1]);
-        if labB(y, x)
+        if labB(y, x)  % Ensure the position is on water
             position = [y, x];
             return;
         end
@@ -200,28 +211,20 @@ end
 
 %% Graph simulation
 
-function plotShip(ship, colors, sunkenColor)
-    typeIndex = find(strcmp({'monitor', 'corvette', 'frigate', 'destroyer'}, ship.type));
+function plotShip(ship, sprites)
+    % Determine the sprite based on the ship type
+    sprite = sprites.(ship.type);
 
-    % While the ship is still active, color it with the corresponding code
-    if ship.life > 0
-        color = colors{typeIndex};
-    else
-        % If the ship has been destroyed, graph it gray
-        color = sunkenColor;
-    end
-    
-    % Plot each ship with their corresponding coordinates and status
-    plot(ship.position(2), ship.position(1), 'D', 'MarkerSize', 10, ...
-         'MarkerFaceColor', color, 'MarkerEdgeColor', 'k');
-    
-    % Assign colors for army labels'
-    if strcmp(ship.army, 'ally')
-        textColor = 'blue';  % Blue for ALLY
-    else
-        textColor = 'red';   % Red for ENEMY
-    end
-    
-    % Graph the label over each ship
-    text(ship.position(2) + 5, ship.position(1), ship.army, 'Color', textColor, 'FontSize', 8);
+    % Calculate the ship position
+    x = ship.position(2); % Horizontal position
+    y = ship.position(1); % Vertical position
+
+    % Sprite dimensions
+    spriteHeight = size(sprite, 1);
+    spriteWidth = size(sprite, 2);
+
+    % Plot the sprite
+    image([x - spriteWidth / 2, x + spriteWidth / 2], ...
+          [y - spriteHeight / 2, y + spriteHeight / 2], ...
+          sprite, 'AlphaData', 1.0); % No transparency
 end
