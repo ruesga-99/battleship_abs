@@ -3,28 +3,7 @@
 This repository contains a collaborative effort of a agent-based model which simulates a naval battle scenario.
 The project is based on the Agent-Based Model proposed in this [paper](An_Agent-Based_Model_Battle_of_Trafalgar.pdf).
 
-```plaintext
-                                     # #  ( )
-                                  ___#_#___|__
-                              _  |____________|  _
-                       _=====| | |            | | |==== _
-                 =====| |.---------------------------. | |====
-   <--------------------'   .  .  .  .  .  .  .  .   '--------------/
-     \                                                             /
-      \___________________________________________________________/
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~oo~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                                                               o o
-                                                               o ooo
-                                                                 o oo
-                                                                    o o      |   #)
-                                                                     oo     _|_|_#_
-                                                                       o   | 751   |
-                                  __                    ___________________|       |_________________
-                                 |   -_______-----------                                              \
-                                >|    _____                                                   --->     )
-                                 |__ -     ---------_________________________________________________ /
-```
+![Banner Image](/assets/readmeBanner.png)
 
 ## Funtionality
 
@@ -44,11 +23,11 @@ The project is based on the Agent-Based Model proposed in this [paper](An_Agent-
 
 | Type      | Firepower | Speed | Health | Max Range | Image                                    |
 | --------- | --------- | ----- | ------ | --------- | ---------------------------------------- |
-| Monitor   | 10        | 3     | 400    | 30        | ![Monitor ship](/assets/monitor.png)     | 
+| Monitor   | 10        | 3     | 400    | 30        | ![Monitor ship](/assets/monitor.png)     |
 | Corvette  | 25        | 2     | 700    | 25        | ![corvette ship](/assets/corvette.png)   |
 | Frigate   | 40        | 2     | 800    | 20        | ![Frigate ship](/assets/frigate.png)     |
 | Destroyer | 50        | 1     | 1000   | 15        | ![Destroyer ship](/assets/destroyer.png) |
-| Sunken    | null      | null  | null   | null      |    |
+| Sunken    | null      | null  | null   | null      | ![Sunken ship](/assets/deadIcon.png.png) |
 
 - Agents keep track of other characteristics such as their position and the nearest enemy.
 
